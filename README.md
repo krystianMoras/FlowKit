@@ -1,3 +1,5 @@
+#### FlowKit - fork, no visualization dependencies
+
 # FlowKit
 
 [!["FlowKit"](https://raw.githubusercontent.com/whitews/FlowKit/master/docs/_static/flowkit.png)](https://github.com/whitews/flowkit)
@@ -83,37 +85,15 @@ Required Python dependencies:
 * [flowio](https://github.com/whitews/flowio) == 1.1.1
 * [flowutils](https://github.com/whitews/flowutils) == 1.0.0
 * anytree >= 2.6
-* bokeh >= 2.4, <3.0
 * lxml >= 4.7
-* matplotlib >= 3.5
 * networkx >= 2.3
 * numpy >= 1.20
 * pandas >= 1.2
 * psutils >= 5.8
 * scipy >= 1.6
-* seaborn >= 0.11, <0.12
 
-## Installation
 
-> **NOTE**: For macOS users running on Apple Silicon, the version of `pip` may need to be upgraded prior to installing FlowKit in order to install the required dependencies.
 
-### From PyPI
-
-```
-pip install flowkit
-```
-
-### From source
-
-Clone the repository and ensure `pip` is up-to-date. It is recommended to use `pip` to install requirements as relying on `setuptools` may result in incompatible dependency versions.
-
-```
-git clone https://github.com/whitews/flowkit
-cd flowkit
-pip install --upgrade pip
-pip install -r requirements.txt
-python setup.py install
-```
 
 ## Documentation
 

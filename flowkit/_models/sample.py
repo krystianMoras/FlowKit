@@ -11,16 +11,11 @@ import io
 from tempfile import TemporaryFile
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn
-from bokeh.layouts import gridplot
-from bokeh.models import Title
 import warnings
 # noinspection PyProtectedMember
 from .._models.transforms import _transforms
 # noinspection PyProtectedMember
 from .._models.transforms._matrix import Matrix
-from .._utils import plot_utils
 
 
 @total_ordering
@@ -101,6 +96,7 @@ class Sample(object):
         also be specified using that method. Sub-sampled events are used predominantly for speeding
         up plotting methods.
     """
+
     def __init__(
             self,
             fcs_path_or_data,
@@ -156,7 +152,8 @@ class Sample(object):
             flow_data = flowio.FlowData(tmp_file)
         elif isinstance(fcs_path_or_data, pd.DataFrame):
             if sample_id is None:
-                raise ValueError("'sample_id' is required for a Pandas DataFrame")
+                raise ValueError(
+                    "'sample_id' is required for a Pandas DataFrame")
 
             tmp_file = TemporaryFile()
 
@@ -242,11 +239,13 @@ class Sample(object):
             else:
                 self.pns_labels.append('')
 
-        self._flowjo_pnn_labels = [label.replace('/', '_') for label in self.pnn_labels]
+        self._flowjo_pnn_labels = [label.replace(
+            '/', '_') for label in self.pnn_labels]
 
         # build the self.channels DataFrame
         self.channels = pd.DataFrame()
-        self.channels['channel_number'] = sorted([int(k) for k in tmp_channels.keys()])
+        self.channels['channel_number'] = sorted(
+            [int(k) for k in tmp_channels.keys()])
         self.channels['pnn'] = self.pnn_labels
         self.channels['pns'] = self.pns_labels
         self.channels['png'] = channel_gain
@@ -285,11 +284,13 @@ class Sample(object):
 
         if 'timestep' in self.metadata and self.time_index is not None:
             time_step = float(self.metadata['timestep'])
-            raw_events[:, self.time_index] = raw_events[:, self.time_index] * time_step
+            raw_events[:, self.time_index] = raw_events[:,
+                                                        self.time_index] * time_step
 
         for i, (decades, log0) in enumerate(channel_lin_log):
             if decades > 0:
-                raw_events[:, i] = (10 ** (decades * raw_events[:, i] / channel_range[i])) * log0
+                raw_events[:, i] = (
+                    10 ** (decades * raw_events[:, i] / channel_range[i])) * log0
 
         self._raw_events = raw_events / channel_gain
         self._comp_events = None
@@ -298,7 +299,8 @@ class Sample(object):
         self.transform = None
         self._subsample_count = None
         self._subsample_seed = None
-        self._include_scatter_option = False  # stores user option from transform_events method
+        # stores user option from transform_events method
+        self._include_scatter_option = False
 
         if compensation is not None:
             self.apply_compensation(compensation)
@@ -388,7 +390,8 @@ class Sample(object):
         # We'll start by checking for the existence of any keywords
         # starting with the string "index sorting locations"
         idx_sort_keyword_base = "index sorting locations"
-        idx_sort_keywords = [k for k in self.metadata.keys() if k.startswith(idx_sort_keyword_base)]
+        idx_sort_keywords = [k for k in self.metadata.keys(
+        ) if k.startswith(idx_sort_keyword_base)]
 
         # loop through in order, these will be indexed at 1
         idx_sort_keyword_count = len(idx_sort_keywords)
@@ -445,7 +448,8 @@ class Sample(object):
             bad_idx = self.negative_scatter_indices
 
         if self.flagged_indices is not None:
-            bad_idx = np.unique(np.concatenate([bad_idx, self.flagged_indices]))
+            bad_idx = np.unique(np.concatenate(
+                [bad_idx, self.flagged_indices]))
 
         bad_count = bad_idx.shape[0]
         if bad_count > 0:
@@ -491,7 +495,8 @@ class Sample(object):
         elif compensation is not None:
             detectors = [self.pnn_labels[i] for i in self.fluoro_indices]
             fluorochromes = [self.pns_labels[i] for i in self.fluoro_indices]
-            self.compensation = Matrix(comp_id, compensation, detectors, fluorochromes)
+            self.compensation = Matrix(
+                comp_id, compensation, detectors, fluorochromes)
             self._comp_events = self.compensation.apply(self)
         else:
             # compensation must be None so clear any matrix and comp events
@@ -500,7 +505,8 @@ class Sample(object):
 
         # Re-apply transform if set
         if self.transform is not None:
-            self._transformed_events = self._transform(self.transform, self._include_scatter_option)
+            self._transformed_events = self._transform(
+                self.transform, self._include_scatter_option)
 
     def get_metadata(self):
         """
@@ -608,7 +614,8 @@ class Sample(object):
         elif source == 'orig':
             events = self._get_orig_events(subsample=subsample)
         else:
-            raise ValueError("source must be one of 'orig', 'raw', 'comp', or 'xform'")
+            raise ValueError(
+                "source must be one of 'orig', 'raw', 'comp', or 'xform'")
 
         return events
 
@@ -629,7 +636,8 @@ class Sample(object):
         """
         events = self.get_events(source=source, subsample=subsample)
 
-        multi_cols = pd.MultiIndex.from_arrays([self.pnn_labels, self.pns_labels], names=['pnn', 'pns'])
+        multi_cols = pd.MultiIndex.from_arrays(
+            [self.pnn_labels, self.pns_labels], names=['pnn', 'pns'])
         events_df = pd.DataFrame(data=events, columns=multi_cols)
 
         if col_order is not None:
@@ -664,13 +672,16 @@ class Sample(object):
         :return: Channel index
         """
         if isinstance(channel_label_or_number, str):
-            index = self.get_channel_number_by_label(channel_label_or_number) - 1
+            index = self.get_channel_number_by_label(
+                channel_label_or_number) - 1
         elif isinstance(channel_label_or_number, int):
             if channel_label_or_number < 1:
-                raise ValueError("Channel numbers are indexed at 1, got %d" % channel_label_or_number)
+                raise ValueError(
+                    "Channel numbers are indexed at 1, got %d" % channel_label_or_number)
             index = channel_label_or_number - 1
         else:
-            raise ValueError("x_label_or_number must be a label string or channel number")
+            raise ValueError(
+                "x_label_or_number must be a label string or channel number")
 
         return index
 
@@ -740,314 +751,10 @@ class Sample(object):
         :param include_scatter: Whether to transform the scatter channel in addition to the
             fluorescent channels. Default is False.
         """
-        self._transformed_events = self._transform(transform, include_scatter=include_scatter)
+        self._transformed_events = self._transform(
+            transform, include_scatter=include_scatter)
         self._include_scatter_option = include_scatter
         self.transform = transform
-
-    def plot_channel(self, channel_label_or_number, source='xform', flag_events=False):
-        """
-        Plot a 2-D histogram of the specified channel data with the x-axis as the event index.
-        This is similar to plotting a channel vs Time, except the events are equally
-        distributed along the x-axis.
-
-        :param channel_label_or_number: A channel's PnN label or number
-        :param source: 'raw', 'comp', 'xform' for whether the raw, compensated
-            or transformed events are used for plotting
-        :param flag_events: whether to flag events using stored flagged_event indices.
-            Flagged event regions will be highlighted in red. Default is False.
-        :return: Matplotlib Figure instance
-        """
-        channel_index = self.get_channel_index(channel_label_or_number)
-        channel_data = self.get_channel_events(channel_index, source=source, subsample=False)
-
-        pnn_label = self.pnn_labels[channel_index]
-        pns_label = self.pns_labels[channel_index]
-
-        plot_title = " - ".join([pnn_label, pns_label]) if pns_label != '' else pnn_label
-
-        if flag_events and self.flagged_indices is not None:
-            flagged_events = np.zeros(self.event_count)
-            flagged_events[self.flagged_indices] = 1
-        else:
-            flagged_events = None
-
-        fig = plt.figure(figsize=(16, 4))
-        ax = fig.add_subplot(1, 1, 1)
-
-        plot_utils.plot_channel(channel_data, plot_title, ax, xform=None, flagged_events=flagged_events)
-
-        return fig
-
-    def plot_contour(
-            self,
-            x_label_or_number,
-            y_label_or_number,
-            source='xform',
-            subsample=True,
-            plot_contour=True,
-            plot_events=False,
-            x_min=None,
-            x_max=None,
-            y_min=None,
-            y_max=None,
-            fill=False,
-            fig_size=(8, 8)
-    ):
-        """
-        Returns a contour plot of the specified channel events, available
-        as raw, compensated, or transformed data.
-
-        :param x_label_or_number:  A channel's PnN label or number for x-axis
-            data
-        :param y_label_or_number: A channel's PnN label or number for y-axis
-            data
-        :param source: 'raw', 'comp', 'xform' for whether the raw, compensated
-            or transformed events are used for plotting
-        :param subsample: Whether to use all events for plotting or just the
-            sub-sampled events. Default is True (sub-sampled events). Running
-            with all events is not recommended, as the Kernel Density
-            Estimation is computationally demanding.
-        :param plot_contour: Whether to display the contour lines. Default is True.
-        :param plot_events: Whether to display the event data points in
-            addition to the contours. Default is False.
-        :param x_min: Lower bound of x-axis. If None, channel's min value will
-            be used with some padding to keep events off the edge of the plot.
-        :param x_max: Upper bound of x-axis. If None, channel's max value will
-            be used with some padding to keep events off the edge of the plot.
-        :param y_min: Lower bound of y-axis. If None, channel's min value will
-            be used with some padding to keep events off the edge of the plot.
-        :param y_max: Upper bound of y-axis. If None, channel's max value will
-            be used with some padding to keep events off the edge of the plot.
-        :param fill: Whether to fill in color between contour lines. D default
-            is False.
-        :param fig_size: Tuple of 2 values specifying the size of the returned
-            figure. Values are in Matplotlib size units.
-        :return: Matplotlib figure of the contour plot
-        """
-        x_index = self.get_channel_index(x_label_or_number)
-        y_index = self.get_channel_index(y_label_or_number)
-
-        x = self.get_channel_events(x_index, source=source, subsample=subsample)
-        y = self.get_channel_events(y_index, source=source, subsample=subsample)
-
-        # noinspection PyProtectedMember
-        x_min, x_max = plot_utils._calculate_extent(x, d_min=x_min, d_max=x_max, pad=0.02)
-        # noinspection PyProtectedMember
-        y_min, y_max = plot_utils._calculate_extent(y, d_min=y_min, d_max=y_max, pad=0.02)
-
-        fig, ax = plt.subplots(figsize=fig_size)
-        ax.set_title(self.id)
-
-        ax.set_xlim([x_min, x_max])
-        ax.set_ylim([y_min, y_max])
-        ax.set_xlabel(self.pnn_labels[x_index])
-        ax.set_ylabel(self.pnn_labels[y_index])
-
-        if plot_events:
-            seaborn.scatterplot(
-                x=x,
-                y=y,
-                palette=plot_utils.new_jet,
-                legend=False,
-                s=6,
-                linewidth=0,
-                alpha=0.4
-            )
-
-        if plot_contour:
-            seaborn.kdeplot(
-                x=x,
-                y=y,
-                bw_method='scott',
-                cmap=plot_utils.new_jet,
-                linewidths=2 if not fill else None,
-                alpha=0.6,
-                fill=fill
-            )
-
-        return fig
-
-    def plot_scatter(
-            self,
-            x_label_or_number,
-            y_label_or_number,
-            source='xform',
-            subsample=True,
-            color_density=True,
-            bin_width=4,
-            highlight_indices=None,
-            x_min=None,
-            x_max=None,
-            y_min=None,
-            y_max=None
-    ):
-        """
-        Returns an interactive scatter plot for the specified channel data.
-
-        :param x_label_or_number:  A channel's PnN label or number for x-axis
-            data
-        :param y_label_or_number: A channel's PnN label or number for y-axis
-            data
-        :param source: 'raw', 'comp', 'xform' for whether the raw, compensated
-            or transformed events are used for plotting
-        :param subsample: Whether to use all events for plotting or just the
-            sub-sampled events. Default is True (sub-sampled events). Plotting
-            sub-sampled events is much faster.
-        :param color_density: Whether to color the events by density, similar
-            to a heat map. Default is True.
-        :param bin_width: Bin size to use for the color density, in units of
-            event point size. Larger values produce smoother gradients.
-            Default is 4 for a 4x4 grid size.
-        :param highlight_indices: Boolean array of event indices to highlight
-            in color. Non-highlighted events will be light grey.
-        :param x_min: Lower bound of x-axis. If None, channel's min value will
-            be used with some padding to keep events off the edge of the plot.
-        :param x_max: Upper bound of x-axis. If None, channel's max value will
-            be used with some padding to keep events off the edge of the plot.
-        :param y_min: Lower bound of y-axis. If None, channel's min value will
-            be used with some padding to keep events off the edge of the plot.
-        :param y_max: Upper bound of y-axis. If None, channel's max value will
-            be used with some padding to keep events off the edge of the plot.
-        :return: A Bokeh Figure object containing the interactive scatter plot.
-        """
-        x_index = self.get_channel_index(x_label_or_number)
-        y_index = self.get_channel_index(y_label_or_number)
-
-        x = self.get_channel_events(x_index, source=source, subsample=subsample)
-        y = self.get_channel_events(y_index, source=source, subsample=subsample)
-        if highlight_indices is not None and subsample:
-            highlight_indices = highlight_indices[self.subsample_indices]
-
-        dim_ids = []
-
-        if self.pns_labels[x_index] != '':
-            dim_ids.append('%s (%s)' % (self.pns_labels[x_index], self.pnn_labels[x_index]))
-        else:
-            dim_ids.append(self.pnn_labels[x_index])
-
-        if self.pns_labels[y_index] != '':
-            dim_ids.append('%s (%s)' % (self.pns_labels[y_index], self.pnn_labels[y_index]))
-        else:
-            dim_ids.append(self.pnn_labels[y_index])
-
-        p = plot_utils.plot_scatter(
-            x,
-            y,
-            dim_ids,
-            x_min=x_min,
-            x_max=x_max,
-            y_min=y_min,
-            y_max=y_max,
-            color_density=color_density,
-            bin_width=bin_width,
-            highlight_indices=highlight_indices
-        )
-
-        p.title = Title(text=self.id, align='center')
-
-        return p
-
-    def plot_scatter_matrix(
-            self,
-            channel_labels_or_numbers=None,
-            source='xform',
-            subsample=True,
-            color_density=False,
-            plot_height=256,
-            plot_width=256
-    ):
-        """
-        Returns an interactive scatter plot matrix for all channel combinations
-        except for the Time channel.
-
-        :param channel_labels_or_numbers: List of channel PnN labels or channel
-            numbers to use for the scatter plot matrix. If None, then all
-            channels will be plotted (except Time).
-        :param source: 'raw', 'comp', 'xform' for whether the raw, compensated
-            or transformed events are used for plotting
-        :param subsample: Whether to use all events for plotting or just the
-            sub-sampled events. Default is True (sub-sampled events). Plotting
-            sub-sampled events is much faster.
-        :param color_density: Whether to color the events by density, similar
-            to a heat map. Default is False.
-        :param plot_height: Height of plot in pixels (screen units)
-        :param plot_width: Width of plot in pixels (screen units)
-        :return: A Bokeh Figure object containing the interactive scatter plot
-            matrix.
-        """
-        plots = []
-        channels = []
-
-        if channel_labels_or_numbers is None:
-            channels = self.pnn_labels
-        else:
-            for c in channel_labels_or_numbers:
-                c_index = self.get_channel_index(c)
-                c_label = self.pnn_labels[c_index]
-
-                if c_label not in channels:
-                    channels.append(c_label)
-
-        for channel_y in channels:
-            if channel_y == 'Time':
-                continue
-            row = []
-            for channel_x in channels:
-                if channel_x == 'Time':
-                    continue
-
-                plot = self.plot_scatter(
-                    channel_x,
-                    channel_y,
-                    source=source,
-                    subsample=subsample,
-                    color_density=color_density
-                )
-                plot.height = plot_height
-                plot.width = plot_width
-                row.append(plot)
-            plots.append(row)
-
-        grid = gridplot(plots)
-
-        return grid
-
-    def plot_histogram(
-            self,
-            channel_label_or_number,
-            source='xform',
-            subsample=False,
-            bins=None
-    ):
-        """
-        Returns a histogram plot of the specified channel events, available
-        as raw, compensated, or transformed data. Plot also contains a curve
-        of the gaussian kernel density estimate.
-
-        :param channel_label_or_number:  A channel's PnN label or number to use
-            for plotting the histogram
-        :param source: 'raw', 'comp', 'xform' for whether the raw, compensated
-            or transformed events are used for plotting
-        :param subsample: Whether to use all events for plotting or just the
-            sub-sampled events. Default is False (all events).
-        :param bins: Number of bins to use for the histogram or a string compatible
-            with the NumPy histogram function. If None, the number of bins is
-            determined by the square root rule.
-        :return: Matplotlib figure of the histogram plot with KDE curve.
-        """
-
-        channel_index = self.get_channel_index(channel_label_or_number)
-        channel_data = self.get_channel_events(channel_index, source=source, subsample=subsample)
-
-        p = plot_utils.plot_histogram(
-            channel_data,
-            x_label=self.pnn_labels[channel_index],
-            bins=bins
-        )
-
-        p.title = Title(text=self.id, align='center')
-
-        return p
 
     def _get_metadata_for_export(self, source, include_all=False):
         metadata_dict = {}
@@ -1083,7 +790,8 @@ class Sample(object):
                 metadata_dict[scale_keyword] = scale_value
                 metadata_dict[range_keyword] = range_value
 
-                ignore_keywords.extend([gain_keyword, scale_keyword, range_keyword])
+                ignore_keywords.extend(
+                    [gain_keyword, scale_keyword, range_keyword])
         else:
             # for 'raw', 'comp', or 'xform' cases, set data type to float
             metadata_dict['datatype'] = 'F'
@@ -1100,7 +808,8 @@ class Sample(object):
                 metadata_dict[scale_keyword] = '0,0'
                 metadata_dict[range_keyword] = '262144'
 
-                ignore_keywords.extend([gain_keyword, scale_keyword, range_keyword])
+                ignore_keywords.extend(
+                    [gain_keyword, scale_keyword, range_keyword])
 
         # Certain metadata fields are set automatically in FlowIO,
         # but FlowIO will ignore them if present, so it's fine to
@@ -1210,7 +919,8 @@ class Sample(object):
                 comments=''
             )
         elif ext == '.fcs':
-            metadata_dict = self._get_metadata_for_export(source=source, include_all=include_metadata)
+            metadata_dict = self._get_metadata_for_export(
+                source=source, include_all=include_metadata)
 
             fh = open(output_path, 'wb')
 
