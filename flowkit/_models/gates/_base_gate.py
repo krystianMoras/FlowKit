@@ -11,7 +11,8 @@ class Gate(ABC):
     def __init__(
             self,
             gate_name,
-            dimensions
+            dimensions,
+            additional_attributes=None,
     ):
         self.gate_name = gate_name
         if dimensions is None:
@@ -19,6 +20,8 @@ class Gate(ABC):
         else:
             self.dimensions = dimensions
         self.gate_type = None
+
+        self.additional_attributes = additional_attributes
 
     def get_dimension(self, dim_id):
         """

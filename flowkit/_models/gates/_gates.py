@@ -24,7 +24,8 @@ class RectangleGate(Gate):
             self,
             gate_name,
             dimensions,
-            use_complement=False
+            use_complement=False,
+            additional_attributes=None
     ):
         """
         Create a RectangleGate instance.
@@ -35,7 +36,8 @@ class RectangleGate(Gate):
         """
         super().__init__(
             gate_name,
-            dimensions
+            dimensions,
+            additional_attributes
         )
         self.gate_type = "RectangleGate"
         self.use_complement = use_complement
@@ -88,7 +90,8 @@ class PolygonGate(Gate):
             gate_name,
             dimensions,
             vertices,
-            use_complement=False
+            use_complement=False,
+            additional_attributes=None
     ):
         """
         Create a PolygonGate instance.
@@ -100,7 +103,8 @@ class PolygonGate(Gate):
         """
         super().__init__(
             gate_name,
-            dimensions
+            dimensions,
+            additional_attributes
         )
         self.vertices = vertices
         self.gate_type = "PolygonGate"
@@ -152,7 +156,8 @@ class EllipsoidGate(Gate):
             dimensions,
             coordinates,
             covariance_matrix,
-            distance_square
+            distance_square,
+            additional_attributes=None
     ):
         """
         Create an EllipsoidGate instance.
@@ -168,7 +173,8 @@ class EllipsoidGate(Gate):
         """
         super().__init__(
             gate_name,
-            dimensions
+            dimensions,
+            additional_attributes
         )
         self.gate_type = "EllipsoidGate"
         self.coordinates = coordinates
@@ -285,7 +291,8 @@ class QuadrantGate(Gate):
             self,
             gate_name,
             dividers,
-            quadrants
+            quadrants,
+            additional_attributes=None
     ):
         """
         Create a QuadrantGate instance.
@@ -296,7 +303,8 @@ class QuadrantGate(Gate):
         """
         super().__init__(
             gate_name,
-            dividers
+            dividers,
+            additional_attributes
         )
         self.gate_type = "QuadrantGate"
 
@@ -382,7 +390,8 @@ class BooleanGate(Gate):
             self,
             gate_name,
             bool_type,
-            gate_refs
+            gate_refs,
+            additional_attributes=None
     ):
         """
         Create a BooleanGate instance.
@@ -398,7 +407,8 @@ class BooleanGate(Gate):
         """
         super().__init__(
             gate_name,
-            None
+            None,
+            additional_attributes
         )
         self.gate_type = "BooleanGate"
 

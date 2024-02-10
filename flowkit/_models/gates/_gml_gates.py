@@ -32,7 +32,7 @@ class GMLRectangleGate(gates.RectangleGate):
             data_type_namespace,
             use_complement=False
     ):
-        gate_name, parent_gate_name, dimensions = xml_utils.parse_gate_element(
+        gate_name, parent_gate_name, dimensions, additional_attributes = xml_utils.parse_gate_element(
             gate_element,
             gating_namespace,
             data_type_namespace
@@ -43,7 +43,8 @@ class GMLRectangleGate(gates.RectangleGate):
         super().__init__(
             gate_name,
             dimensions,
-            use_complement=self.use_complement
+            use_complement=self.use_complement,
+            additional_attributes=additional_attributes
         )
 
     def convert_to_parent_class(self):
@@ -52,7 +53,7 @@ class GMLRectangleGate(gates.RectangleGate):
 
         :return: RectangleGate
         """
-        return gates.RectangleGate(self.gate_name, self.dimensions, use_complement=self.use_complement)
+        return gates.RectangleGate(self.gate_name, self.dimensions, use_complement=self.use_complement, additional_attributes=self.additional_attributes)
 
 
 class GMLPolygonGate(gates.PolygonGate):
@@ -71,7 +72,7 @@ class GMLPolygonGate(gates.PolygonGate):
             data_type_namespace,
             use_complement=False
     ):
-        gate_name, parent_gate_name, dimensions = xml_utils.parse_gate_element(
+        gate_name, parent_gate_name, dimensions, additional_attributes = xml_utils.parse_gate_element(
             gate_element,
             gating_namespace,
             data_type_namespace
@@ -95,7 +96,8 @@ class GMLPolygonGate(gates.PolygonGate):
             gate_name,
             dimensions,
             vertices,
-            use_complement=self.use_complement
+            use_complement=self.use_complement,
+            additional_attributes=additional_attributes
         )
 
     def convert_to_parent_class(self):
@@ -104,7 +106,7 @@ class GMLPolygonGate(gates.PolygonGate):
 
         :return: PolygonGate
         """
-        return gates.PolygonGate(self.gate_name, self.dimensions, self.vertices, use_complement=self.use_complement)
+        return gates.PolygonGate(self.gate_name, self.dimensions, self.vertices, use_complement=self.use_complement,additional_attributes= self.additional_attributes)
 
 
 class GMLEllipsoidGate(gates.EllipsoidGate):
@@ -121,7 +123,7 @@ class GMLEllipsoidGate(gates.EllipsoidGate):
             gating_namespace,
             data_type_namespace
     ):
-        gate_name, parent_gate_name, dimensions = xml_utils.parse_gate_element(
+        gate_name, parent_gate_name, dimensions, additional_attributes = xml_utils.parse_gate_element(
             gate_element,
             gating_namespace,
             data_type_namespace
@@ -203,7 +205,8 @@ class GMLEllipsoidGate(gates.EllipsoidGate):
             dimensions,
             coordinates,
             covariance_matrix,
-            distance_square
+            distance_square,
+            additional_attributes=additional_attributes
         )
 
     def convert_to_parent_class(self):
@@ -213,7 +216,7 @@ class GMLEllipsoidGate(gates.EllipsoidGate):
         :return: EllipsoidGate
         """
         return gates.EllipsoidGate(
-            self.gate_name, self.dimensions, self.coordinates, self.covariance_matrix, self.distance_square
+            self.gate_name, self.dimensions, self.coordinates, self.covariance_matrix, self.distance_square, additional_attributes = self.additional_attributes
         )
 
 
@@ -237,7 +240,7 @@ class GMLQuadrantGate(gates.QuadrantGate):
             gating_namespace,
             data_type_namespace
     ):
-        gate_name, parent_gate_name, dividers = xml_utils.parse_gate_element(
+        gate_name, parent_gate_name, dividers, additional_attributes = xml_utils.parse_gate_element(
             gate_element,
             gating_namespace,
             data_type_namespace
@@ -313,7 +316,8 @@ class GMLQuadrantGate(gates.QuadrantGate):
         super().__init__(
             gate_name,
             dividers,
-            quadrants
+            quadrants,
+            additional_attributes=additional_attributes
         )
 
     def convert_to_parent_class(self):
@@ -322,7 +326,7 @@ class GMLQuadrantGate(gates.QuadrantGate):
 
         :return: QuadrantGate
         """
-        return gates.QuadrantGate(self.gate_name, self.dimensions, self.quadrants.values())
+        return gates.QuadrantGate(self.gate_name, self.dimensions, self.quadrants.values(), self.additional_attributes)
 
 
 class GMLBooleanGate(gates.BooleanGate):
@@ -340,7 +344,7 @@ class GMLBooleanGate(gates.BooleanGate):
             gating_namespace,
             data_type_namespace
     ):
-        gate_name, parent_gate_name, dimensions = xml_utils.parse_gate_element(
+        gate_name, parent_gate_name, dimensions, additional_attributes = xml_utils.parse_gate_element(
             gate_element,
             gating_namespace,
             data_type_namespace
@@ -407,7 +411,8 @@ class GMLBooleanGate(gates.BooleanGate):
         super().__init__(
             gate_name,
             bool_type,
-            gate_refs
+            gate_refs,
+            additional_attributes=additional_attributes
         )
 
     def convert_to_parent_class(self):
@@ -416,4 +421,4 @@ class GMLBooleanGate(gates.BooleanGate):
 
         :return: BooleanGate
         """
-        return gates.BooleanGate(self.gate_name, self.type, self.gate_refs)
+        return gates.BooleanGate(self.gate_name, self.type, self.gate_refs, self.additional_attributes)

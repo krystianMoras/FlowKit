@@ -337,7 +337,7 @@ def find_attribute_value(xml_el, namespace, attribute_name):
 
 
 def parse_gate_element(
-        gate_element,
+        gate_element: etree._Element,
         gating_namespace,
         data_type_namespace
 ):
@@ -377,7 +377,14 @@ def parse_gate_element(
             dim = _parse_divider_element(div_el, gating_namespace, data_type_namespace)
             dimensions.append(dim)
 
-    return gate_id, parent_id, dimensions
+    additional_attributes = {}
+    for key, value in gate_element.attrib.items():
+        key_local = etree.QName(key).localname
+        if key_local not in ['id', 'parent_id']:
+            additional_attributes[key_local] = value
+
+
+    return gate_id, parent_id, dimensions, additional_attributes
 
 
 def _parse_dimension_element(
@@ -729,6 +736,9 @@ def _add_gate_to_gml(root, gate, ns_map):
         raise ValueError("Gate %s is not a valid GatingML 2.0 element" % gate.gate_name)
 
     gate_ml.set('{%s}id' % ns_map['gating'], gate.gate_name)
+
+    for key, value in gate.additional_attributes.items():
+        gate_ml.set('{%s}%s' % (ns_map['gating'], key), value)
 
     for i, dim in enumerate(gate.dimensions):
         dim_type = 'dim'
