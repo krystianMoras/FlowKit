@@ -63,6 +63,8 @@ class GatingStrategy(object):
 
         :return: None
         """
+        if sample_id is not None:
+            gate.additional_attributes['sample_id'] = sample_id
         if not isinstance(gate, Gate):
             raise TypeError("gate must be a sub-class of the Gate class")
 
@@ -113,12 +115,14 @@ class GatingStrategy(object):
 
 
     def edit_gate(self, gate, sample_id=None):
+        if sample_id is not None:
+            gate.additional_attributes['sample_id'] = sample_id
         if not isinstance(gate, Gate):
             raise TypeError("gate must be a sub-class of the Gate class")
         
         # determine if gate already exists with name and path
         try:
-            node = self.resolver.get(self._gate_tree, gate.gate_name)
+            node = self._get_gate_node(gate.gate_name)
         except anytree.ResolverError:
             # this is expected if the gate doesn't already exist
             raise GateTreeError("Gate %s does not exist" % gate.gate_name)
