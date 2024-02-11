@@ -75,17 +75,11 @@ class GatingResults(object):
 
         self.report = df.sort_values(['sample', 'level', 'gate_name'])
 
-    def _filter_gate_report(self, gate_name, gate_path=None):
+    def _filter_gate_report(self, gate_name):
         results = self.report[(self.report['sample'] == self.sample_id) & (self.report['gate_name'] == gate_name)]
-
-        if gate_path is not None:
-            results = results[results.gate_path == gate_path]
-        elif len(results) > 1:
-            raise ValueError("Gate name %s is ambiguous, specify the full gate path")
-
         return results
 
-    def get_gate_membership(self, gate_name, gate_path=None):
+    def get_gate_membership(self, gate_name):
         """
         Retrieve a boolean array indicating gate membership for the events in the GatingResults sample.
         Note, the same gate ID may be found in multiple gate paths, i.e. the gate ID can be ambiguous.
@@ -97,13 +91,8 @@ class GatingResults(object):
         :return: NumPy boolean array (length of sample event count)
         """
         gate_paths = self._gate_lut[gate_name]['paths']
-        if len(gate_paths) > 1:
-            if gate_path is None:
-                raise ValueError("Gate name %s is ambiguous, specify the full gate path")
-            elif isinstance(gate_path, tuple):
-                gate_path = "/".join(gate_path)
-        else:
-            gate_path = gate_paths[0]
+
+        gate_path = gate_paths[0]
 
         # need to check for quadrant gates, as they need to be handled differently
         gate_data = self.report[(self.report['sample'] == self.sample_id) & (self.report.gate_name == gate_name)]
@@ -118,7 +107,7 @@ class GatingResults(object):
         else:
             raise ValueError("Report as bug: The gate %s appears to have multiple quadrant parents." % gate_name)
 
-    def get_gate_count(self, gate_name, gate_path=None):
+    def get_gate_count(self, gate_name):
         """
         Retrieve event count for the specified gate ID for the gating results sample
 
@@ -126,11 +115,11 @@ class GatingResults(object):
         :param gate_path: tuple of ancestor gate names
         :return: integer count of events in gate ID
         """
-        results = self._filter_gate_report(gate_name, gate_path=gate_path)
+        results = self._filter_gate_report(gate_name)
 
         return results['count'].values[0]
 
-    def get_gate_absolute_percent(self, gate_name, gate_path=None):
+    def get_gate_absolute_percent(self, gate_name):
         """
         Retrieve percent of events, relative to the total sample events, of the specified gate ID for the
         gating results sample
@@ -139,11 +128,11 @@ class GatingResults(object):
         :param gate_path: tuple of ancestor gate names
         :return: floating point number of the absolute percent
         """
-        results = self._filter_gate_report(gate_name, gate_path=gate_path)
+        results = self._filter_gate_report(gate_name)
 
         return results['absolute_percent'].values[0]
 
-    def get_gate_relative_percent(self, gate_name, gate_path=None):
+    def get_gate_relative_percent(self, gate_name):
         """
         Retrieve percent of events, relative to parent gate, of the specified gate ID for the gating results sample
 
@@ -151,6 +140,6 @@ class GatingResults(object):
         :param gate_path: tuple of ancestor gate names
         :return: floating point number of the relative percent
         """
-        results = self._filter_gate_report(gate_name, gate_path=gate_path)
+        results = self._filter_gate_report(gate_name)
 
         return results['relative_percent'].values[0]

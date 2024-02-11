@@ -89,7 +89,7 @@ class Session(object):
         """
         return self.gating_strategy.get_gate_ids()
 
-    def add_gate(self, gate, gate_path, sample_id=None):
+    def add_gate(self, gate, gate_path, sample_id):
         """
         Add a Gate instance to the gating strategy. The gate ID and gate path
         must be unique in the gating strategy. Custom sample gates may be added
@@ -101,10 +101,26 @@ class Session(object):
         :param sample_id: text string for specifying given gate as a custom Sample gate
         :return: None
         """
+        gate.additional_attributes["sample_id"] = sample_id
         self.gating_strategy.add_gate(copy.deepcopy(
             gate), gate_path=gate_path, sample_id=sample_id)
 
-    def remove_gate(self, gate_name, gate_path=None, keep_children=False):
+    def edit_gate(self, gate, sample_id):
+        """
+        Edit a Gate instance in the gating strategy. The gate ID and gate path
+        must exist in the gating strategy. Custom sample gates may be edited
+        by specifying an optional sample ID.
+
+        :param gate: an instance of a Gate subclass
+        :param gate_path: complete tuple of gate IDs for unique set of gate ancestors
+        :param sample_id: text string for specifying given gate as a custom Sample gate
+        :return: None
+        """
+        gate.additional_attributes["sample_id"] = sample_id
+        self.gating_strategy.edit_gate(copy.deepcopy(
+            gate), sample_id=sample_id)
+
+    def remove_gate(self, gate_name, keep_children=False):
         """
         Remove a gate from the gate tree. Any descendant gates will also be removed
         unless keep_children=True. In all cases, if a BooleanGate exists that references
@@ -120,7 +136,7 @@ class Session(object):
         :return: None
         """
         self.gating_strategy.remove_gate(
-            gate_name, gate_path=gate_path, keep_children=keep_children)
+            gate_name, keep_children=keep_children)
 
     def add_transform(self, transform):
         """
@@ -184,7 +200,7 @@ class Session(object):
         """
         return self.gating_strategy.find_matching_gate_paths(gate_name)
 
-    def get_child_gate_ids(self, gate_name, gate_path=None):
+    def get_child_gate_ids(self, gate_name):
         """
         Retrieve list of child gate IDs given the parent gate name (and path if ambiguous)
         in the gating strategy.
@@ -197,9 +213,9 @@ class Session(object):
         :raises GateReferenceError: if gate ID is not found in gating strategy or if gate
             name is ambiguous
         """
-        return self.gating_strategy.get_child_gate_ids(gate_name, gate_path)
+        return self.gating_strategy.get_child_gate_ids(gate_name)
 
-    def get_gate(self, gate_name, gate_path=None, sample_id=None):
+    def get_gate(self, gate_name, sample_id=None):
         """
         Retrieve a gate instance by its gate ID (and sample ID for custom sample gates).
 
@@ -208,7 +224,7 @@ class Session(object):
         :param sample_id: a text string representing a Sample instance. If None, the template gate is returned.
         :return: Subclass of a Gate object
         """
-        return self.gating_strategy.get_gate(gate_name, gate_path=gate_path, sample_id=sample_id)
+        return self.gating_strategy.get_gate(gate_name, sample_id=sample_id)
 
     def get_sample_gates(self, sample_id):
         """
@@ -224,8 +240,9 @@ class Session(object):
 
         for gate_name, ancestors in gate_tuples:
             gate = self.gating_strategy.get_gate(
-                gate_name, gate_path=ancestors, sample_id=sample_id)
-            sample_gates.append(gate)
+                gate_name, sample_id=sample_id)
+            if gate is not None:
+                sample_gates.append(gate)
 
         return sample_gates
 
@@ -357,7 +374,7 @@ class Session(object):
 
         return copy.deepcopy(pd.concat(all_reports))
 
-    def get_gate_membership(self, sample_id, gate_name, gate_path=None):
+    def get_gate_membership(self, sample_id, gate_name):
         """
         Retrieve a boolean array indicating gate membership for the events in the
         specified sample. Note, the same gate ID may be found in multiple gate paths,
@@ -371,9 +388,9 @@ class Session(object):
         :return: NumPy boolean array (length of sample event count)
         """
         gating_result = self._results_lut[sample_id]
-        return gating_result.get_gate_membership(gate_name, gate_path=gate_path)
+        return gating_result.get_gate_membership(gate_name)
 
-    def get_gate_events(self, sample_id, gate_name=None, gate_path=None, matrix=None, transform=None):
+    def get_gate_events(self, sample_id, gate_name=None, matrix=None, transform=None):
         """
         Retrieve a pandas DataFrame containing only the events within the specified gate.
         If an optional compensation matrix and/or a transform is provided, the returned
@@ -407,7 +424,7 @@ class Session(object):
 
         if gate_name is not None:
             gate_idx = self.get_gate_membership(
-                sample_id, gate_name, gate_path)
+                sample_id, gate_name)
             events_df = events_df[gate_idx]
 
         return events_df

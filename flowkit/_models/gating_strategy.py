@@ -90,11 +90,9 @@ class GatingStrategy(object):
                     "Only an individual Quadrant can be used as a parent."
                 )
 
-        # determine if gate already exists with name and path
-        abs_gate_path = list(gate_path) + [gate.gate_name]
-        abs_gate_path = "/" + "/".join(abs_gate_path)
+        # determine if gate already exists with name 
         try:
-            node = self.resolver.get(self._gate_tree, abs_gate_path)
+            node = self.resolver.get(self._gate_tree, gate.gate_name)
         except anytree.ResolverError:
             # this is expected if the gate doesn't already exist
             node = None
@@ -103,7 +101,7 @@ class GatingStrategy(object):
             # A node was found. If no sample ID is given, the gate
             # already exists and is the template gate.
             if sample_id is None:
-                raise GateTreeError("Gate %s already exists" % abs_gate_path)
+                raise GateTreeError("Gate %s already exists" % gate.gate_name)
             else:
                 # Attempt to create sample custom gate, GateNode.add_gate will
                 # raise a GateTreeError if it already exists.
@@ -113,7 +111,26 @@ class GatingStrategy(object):
             GateNode(gate, parent_node)
             self._rebuild_dag()
 
-    def is_custom_gate(self, gate_name, gate_path=None, sample_id=None):
+
+    def edit_gate(self, gate, sample_id=None):
+        if not isinstance(gate, Gate):
+            raise TypeError("gate must be a sub-class of the Gate class")
+        
+        # determine if gate already exists with name and path
+        try:
+            node = self.resolver.get(self._gate_tree, gate.gate_name)
+        except anytree.ResolverError:
+            # this is expected if the gate doesn't already exist
+            raise GateTreeError("Gate %s does not exist" % gate.gate_name)
+
+        if node is not None:
+            if sample_id in node.custom_gates:
+                node.custom_gates[sample_id] = gate
+            else:
+                node.gate = gate
+            
+
+    def is_custom_gate(self, gate_name, sample_id=None):
         """
         Determine if a custom gate exists for a sample ID.
 
@@ -123,11 +140,11 @@ class GatingStrategy(object):
         :param sample_id: Sample ID string
         :return: Boolean value for whether the sample ID has a custom gate
         """
-        node = self._get_gate_node(gate_name, gate_path)
+        node = self._get_gate_node(gate_name)
 
         return node.is_custom_gate(sample_id)
 
-    def get_gate(self, gate_name, gate_path=None, sample_id=None):
+    def get_gate(self, gate_name, sample_id=None):
         """
         Retrieve a gate instance by its gate ID (gate name and optional gate_path).
         If a sample_id is specified, the custom sample gate will be returned if it
@@ -142,7 +159,7 @@ class GatingStrategy(object):
             GateReferenceError: if gate ID is not found in gating strategy
             QuadrantReferenceError: if gate ID references a single Quadrant (specify the QuadrantGate ID instead)
         """
-        node = self._get_gate_node(gate_name, gate_path)
+        node = self._get_gate_node(gate_name)
 
         if isinstance(node.gate, fk_gates.Quadrant):
             # A Quadrant isn't a true gate, raise error indicating to call its QuadrantGate
@@ -176,7 +193,7 @@ class GatingStrategy(object):
 
         self._dag = nx.DiGraph(dag_edges)
 
-    def remove_gate(self, gate_name, gate_path=None, keep_children=False):
+    def remove_gate(self, gate_name, keep_children=False):
         """
         Remove a gate from the gating strategy. Any descendant gates will also be removed
         unless keep_children=True. In all cases, if a BooleanGate exists that references
@@ -194,7 +211,7 @@ class GatingStrategy(object):
         # First, get the gate node from anytree
         # Note, this will raise an error on ambiguous gates so no need
         # to handle that case
-        gate_node = self._get_gate_node(gate_name, gate_path=gate_path)
+        gate_node = self._get_gate_node(gate_name)
         gate = gate_node.gate
 
         # single quadrants can't be removed, their "parent" QuadrantGate must be removed
@@ -228,7 +245,7 @@ class GatingStrategy(object):
         # check successor gates for a boolean gate,
         # if present throw a GateTreeError
         for s_tuple in successor_node_tuples:
-            s_gate_node = self._get_gate_node(s_tuple[-1], gate_path=s_tuple[:-1])
+            s_gate_node = self._get_gate_node(s_tuple[-1])
             s_gate = s_gate_node.gate
 
             if isinstance(s_gate, fk_gates.BooleanGate):
@@ -314,7 +331,7 @@ class GatingStrategy(object):
         """
         return self.comp_matrices[matrix_id]
 
-    def _get_gate_node(self, gate_name, gate_path=None):
+    def _get_gate_node(self, gate_name):
         """
         Retrieve a GateNode instance by its gate ID (gate name and optional gate_path).
         A GateNode contains the Gate instance (and any custom sample gates). A GateNode
@@ -331,37 +348,12 @@ class GatingStrategy(object):
         node_match_count = len(node_matches)
 
         if node_match_count == 1:
-            node = node_matches[0]
+            return node_matches[0]
         elif node_match_count > 1:
-            # need to match on full gate path
-            # TODO: what if QuadrantGate is re-used, does this still work for that case
-            if gate_path is None:
-                raise GateReferenceError(
-                    "Found multiple gates with name %s. Provide full 'gate_path' to disambiguate." % gate_name
-                )
-
-            gate_matches = []
-            gate_path_length = len(gate_path)
-            for n in node_matches:
-                if len(n.ancestors) != gate_path_length:
-                    continue
-                ancestor_matches = tuple((a.name for a in n.ancestors if a.name in gate_path))
-                if ancestor_matches == gate_path:
-                    gate_matches.append(n)
-
-            if len(gate_matches) == 1:
-                node = gate_matches[0]
-            elif len(gate_matches) > 1:
-                raise ValueError("Report as bug: Found multiple gates with ID %s and given gate path." % gate_name)
-            else:
-                node = None
+            raise GateReferenceError("Multiple gates with the same name %s found" % gate_name) 
         else:
-            node = None
-
-        if node is None:
             raise GateReferenceError("Gate name %s was not found in gating strategy" % gate_name)
 
-        return node
 
     def find_matching_gate_paths(self, gate_name):
         """
@@ -398,7 +390,7 @@ class GatingStrategy(object):
 
         return root_gates
 
-    def get_parent_gate_id(self, gate_name, gate_path=None):
+    def get_parent_gate_id(self, gate_name):
         """
         Retrieve the parent Gate ID for the given gate ID.
 
@@ -407,7 +399,7 @@ class GatingStrategy(object):
             Required if gate_name is ambiguous
         :return: a gate ID (tuple of gate name and gate path)
         """
-        node = self._get_gate_node(gate_name, gate_path)
+        node = self._get_gate_node(gate_name)
 
         if node.parent.name == 'root':
             return None
@@ -416,7 +408,7 @@ class GatingStrategy(object):
 
         return node.parent.name, parent_gate_path
 
-    def get_child_gate_ids(self, gate_name, gate_path=None):
+    def get_child_gate_ids(self, gate_name):
         """
         Retrieve list of child gate instances by their parent's gate ID.
 
@@ -428,7 +420,7 @@ class GatingStrategy(object):
         :raises GateReferenceError: if gate ID is not found in gating strategy or if gate
             name is ambiguous
         """
-        node = self._get_gate_node(gate_name, gate_path)
+        node = self._get_gate_node(gate_name)
 
         child_gate_ids = []
 
@@ -819,7 +811,6 @@ class GatingStrategy(object):
         # parent results. This should avoid having any gate
         # processed more than once.
         process_order = list(nx.algorithms.topological_sort(self._dag))
-
         process_order.remove(('root',))
 
         for item in process_order:
@@ -845,12 +836,14 @@ class GatingStrategy(object):
             # we'll check for that. All quadrant sub-gates will get processed with the
             # main QuadrantGate
             try:
-                gate = self.get_gate(g_id, g_path, sample_id=sample_id)
-            except QuadrantReferenceError:
+                gate = self.get_gate(g_id, sample_id=sample_id)
+                if gate is None:
+                    raise GateReferenceError("Gate %s not found" % g_id)
+            except (QuadrantReferenceError, GateReferenceError):
                 continue
 
             if verbose:
-                is_custom_gate = self.is_custom_gate(g_id, g_path, sample_id)
+                is_custom_gate = self.is_custom_gate(g_id, sample_id)
                 if is_custom_gate:
                     custom_gate_str = ' [custom]'
                 else:
@@ -862,7 +855,7 @@ class GatingStrategy(object):
             parent_results = None  # default to None
             if p_id != 'root':
                 try:
-                    _ = self.get_gate(p_id, p_path)
+                    _ = self.get_gate(p_id, sample_id=sample_id)
                     if p_uid in results:
                         parent_results = results[p_uid]
                 except QuadrantReferenceError:
@@ -882,7 +875,7 @@ class GatingStrategy(object):
 
                     try:
                         # get_gate used just to differentiate between quadrant results & regular gate results
-                        _ = self.get_gate(gate_ref['ref'], gate_ref['path'])
+                        _ = self.get_gate(gate_ref['ref'], sample_id=sample_id)
                         bool_gate_ref_results[gate_ref_res_key] = results[gate_ref_res_key]['events']
                     except QuadrantReferenceError:
                         quad_gate_name = gate_ref['path'][-1]

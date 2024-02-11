@@ -124,7 +124,10 @@ def parse_gating_xml(xml_file_or_path):
         gate_path = tuple(nx.shortest_path(dag, 'root', g_id))[:-1]
 
         # Convert GML gates to their superclass & add to gating strategy
-        gating_strategy.add_gate(gate.convert_to_parent_class(), gate_path)
+        gate = gate.convert_to_parent_class()
+        sample_id = gate.additional_attributes.get('sample_id', None)
+        print(sample_id)
+        gating_strategy.add_gate(gate, gate_path, sample_id=sample_id)
 
     return gating_strategy
 

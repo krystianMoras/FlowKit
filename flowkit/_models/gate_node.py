@@ -83,4 +83,9 @@ class GateNode(anytree.Node):
         if sample_id in self.custom_gates:
             return self.custom_gates[sample_id]
 
+        if sample_id is not None:
+            if self.gate.additional_attributes.get("sample_id") == sample_id:
+                return self.gate
+            else:
+                return None
         return self.gate
