@@ -10,6 +10,7 @@ from .._conf import debug
 from .._models.gating_strategy import GatingStrategy
 from .._utils import xml_utils, wsp_utils, sample_utils, gating_utils
 import warnings
+import flowkit._models.gates as fk_gates
 
 
 class Session(object):
@@ -215,7 +216,7 @@ class Session(object):
         """
         return self.gating_strategy.get_child_gate_ids(gate_name)
 
-    def get_gate(self, gate_name, sample_id=None):
+    def get_gate(self, gate_name, sample_id=None) -> fk_gates.BooleanGate | fk_gates.QuadrantGate | fk_gates.Quadrant | fk_gates.PolygonGate | fk_gates.RectangleGate | fk_gates.EllipsoidGate:
         """
         Retrieve a gate instance by its gate ID (and sample ID for custom sample gates).
 
@@ -245,6 +246,16 @@ class Session(object):
                 sample_gates.append(gate)
 
         return sample_gates
+    
+    def get_graph_for_sample(self, sample_id):
+        """
+        Retrieve the graph of gates for a sample in the gating strategy. This returns custom sample
+        gates for the specified sample ID.
+
+        :param sample_id: a text string representing a Sample instance
+        :return: list of Gate subclass instances
+        """
+        return self.gating_strategy.build_graph_for_sample(sample_id)
 
     def get_gate_hierarchy(self, output='ascii', **kwargs):
         """

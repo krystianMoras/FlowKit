@@ -148,7 +148,7 @@ class GatingStrategy(object):
 
         return node.is_custom_gate(sample_id)
 
-    def get_gate(self, gate_name, sample_id=None):
+    def get_gate(self, gate_name, sample_id=None) -> fk_gates.BooleanGate | fk_gates.QuadrantGate | fk_gates.Quadrant | fk_gates.PolygonGate | fk_gates.RectangleGate | fk_gates.EllipsoidGate:
         """
         Retrieve a gate instance by its gate ID (gate name and optional gate_path).
         If a sample_id is specified, the custom sample gate will be returned if it
@@ -393,6 +393,30 @@ class GatingStrategy(object):
             root_gates.append(node.get_gate(sample_id=sample_id))
 
         return root_gates
+    
+    def build_graph_for_sample(self, sample_id):
+        root = self._gate_tree.root
+
+        root_children = root.children
+
+        digraph = nx.DiGraph()
+        digraph.add_node("root")
+        def add_edges_for_children(node, digraph, sample_id):
+            for child in node.children:
+                gate = child.get_gate(sample_id)
+                if gate is not None:
+                    digraph.add_edge(node.name, child.name)
+                    add_edges_for_children(child, digraph, sample_id)
+        current_parent = "root"
+        for node in root_children:
+            gate = node.get_gate(sample_id)
+            if gate is not None:
+                digraph.add_edge(current_parent, gate.gate_name)
+                
+
+                add_edges_for_children(node, digraph, sample_id)
+
+        return digraph
 
     def get_parent_gate_id(self, gate_name):
         """
