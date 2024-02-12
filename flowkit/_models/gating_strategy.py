@@ -81,7 +81,7 @@ class GatingStrategy(object):
         try:
             parent_node = self.resolver.get(self._gate_tree, parent_abs_gate_path)
             if sample_id is not None:
-                if parent_node.gate.additional_attributes["sample_id"] != sample_id:
+                if parent_node.name != "root" and parent_node.gate.additional_attributes["sample_id"] != sample_id:
                     raise GateTreeError("Parent gate is not in the same sample")
         except anytree.ResolverError:
             # this should never happen unless someone messed with the gate tree
