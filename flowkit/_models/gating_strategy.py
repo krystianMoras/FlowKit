@@ -80,6 +80,9 @@ class GatingStrategy(object):
         parent_abs_gate_path = "/" + "/".join(gate_path)
         try:
             parent_node = self.resolver.get(self._gate_tree, parent_abs_gate_path)
+            if sample_id is not None:
+                if parent_node.gate.additional_attributes["sample_id"] != sample_id:
+                    raise GateTreeError("Parent gate is not in the same sample")
         except anytree.ResolverError:
             # this should never happen unless someone messed with the gate tree
             raise GateTreeError("Parent gate %s doesn't exist" % parent_abs_gate_path)
@@ -123,6 +126,8 @@ class GatingStrategy(object):
         # determine if gate already exists with name and path
         try:
             node = self._get_gate_node(gate.gate_name)
+            if node.parent.name != "root" and node.parent.gate.additional_attributes["sample_id"] != sample_id:
+                raise GateTreeError("Parent gate is not in the same sample")
         except anytree.ResolverError:
             # this is expected if the gate doesn't already exist
             raise GateTreeError("Gate %s does not exist" % gate.gate_name)
@@ -335,7 +340,7 @@ class GatingStrategy(object):
         """
         return self.comp_matrices[matrix_id]
 
-    def _get_gate_node(self, gate_name):
+    def _get_gate_node(self, gate_name)-> GateNode:
         """
         Retrieve a GateNode instance by its gate ID (gate name and optional gate_path).
         A GateNode contains the Gate instance (and any custom sample gates). A GateNode
