@@ -12,7 +12,7 @@ class Gate(ABC):
             self,
             gate_name,
             dimensions,
-            additional_attributes=None,
+            additional_attributes={},
     ):
         self.gate_name = gate_name
         if dimensions is None:

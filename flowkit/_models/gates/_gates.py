@@ -25,7 +25,7 @@ class RectangleGate(Gate):
             gate_name,
             dimensions,
             use_complement=False,
-            additional_attributes=None
+            additional_attributes={}
     ):
         """
         Create a RectangleGate instance.
@@ -91,7 +91,7 @@ class PolygonGate(Gate):
             dimensions,
             vertices,
             use_complement=False,
-            additional_attributes=None
+            additional_attributes={}
     ):
         """
         Create a PolygonGate instance.
@@ -157,7 +157,7 @@ class EllipsoidGate(Gate):
             coordinates,
             covariance_matrix,
             distance_square,
-            additional_attributes=None
+            additional_attributes={}
     ):
         """
         Create an EllipsoidGate instance.
@@ -292,7 +292,7 @@ class QuadrantGate(Gate):
             gate_name,
             dividers,
             quadrants,
-            additional_attributes=None
+            additional_attributes={}
     ):
         """
         Create a QuadrantGate instance.
@@ -391,7 +391,7 @@ class BooleanGate(Gate):
             gate_name,
             bool_type,
             gate_refs,
-            additional_attributes=None
+            additional_attributes={}
     ):
         """
         Create a BooleanGate instance.

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from .._conf import debug
 from .._models.gating_strategy import GatingStrategy
+from ..exceptions import GateReferenceError, GateTreeError
 from .._utils import xml_utils, wsp_utils, sample_utils, gating_utils
 import warnings
 import flowkit._models.gates as fk_gates
@@ -439,3 +440,20 @@ class Session(object):
             events_df = events_df[gate_idx]
 
         return events_df
+
+
+    def merge_strategy(self, other_strategy: GatingStrategy):
+
+        # get the gates from the other strategy
+        for gate_name, ancestors in other_strategy.get_gate_ids():
+            # if gate_name
+            print(gate_name, ancestors)
+            gate = other_strategy.get_gate(gate_name)
+            try:
+                self.gating_strategy.get_gate(gate_name)
+                self.gating_strategy.edit_gate(copy.deepcopy(gate), gate.additional_attributes.get('sample_id', None))
+            except GateReferenceError:
+                self.gating_strategy.add_gate(copy.deepcopy(gate), gate_path=ancestors, sample_id=gate.additional_attributes.get('sample_id', None))
+
+
+
