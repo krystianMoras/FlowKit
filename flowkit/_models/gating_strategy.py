@@ -844,7 +844,8 @@ class GatingStrategy(object):
         # parent results. This should avoid having any gate
         # processed more than once.
         process_order = list(nx.algorithms.topological_sort(self._dag))
-        process_order.remove(('root',))
+        if ('root',) in process_order:
+            process_order.remove(('root',))
 
         for item in process_order:
             # to make the dict key unique, make a string from the ancestors,
