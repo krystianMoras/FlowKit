@@ -17,7 +17,7 @@ def _gate_sample(data):
 
     gating_results = gating_strategy.gate_sample(sample, cache_events=cache_events, verbose=verbose)
 
-    gc.collect()
+    #gc.collect()
 
     return gating_results
 

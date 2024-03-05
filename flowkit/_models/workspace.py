@@ -397,7 +397,7 @@ class Workspace(object):
             # clear any existing results
             if sample_id in self._results_lut:
                 del self._results_lut[sample_id]
-                gc.collect()
+                # gc.collect()
 
         results = gating_utils.gate_samples(
             sample_data_to_run,
